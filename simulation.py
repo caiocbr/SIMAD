@@ -72,8 +72,6 @@ class Vehicle(pygame.sprite.Sprite):
         path = "images/" + direction + "/" + vehicleClass + ".png"
         self.image = pygame.image.load(path)
 
-        print("Created")
-
         if(len(vehicles[direction][lane])>1 and vehicles[direction][lane][self.index-1].crossed==0):    # if more than 1 vehicle in the lane of vehicle before it has crossed stop line
             if(direction=='right'):
                 self.stop = vehicles[direction][lane][self.index-1].stop - vehicles[direction][lane][self.index-1].image.get_rect().width - stoppingGap         # setting stop coordinate as: stop coordinate of next vehicle - width of next vehicle - gap
@@ -134,12 +132,10 @@ class Vehicle(pygame.sprite.Sprite):
             self.startTime = datetime.now()
 
         if(self.x+self.image.get_rect().width >= 1400 and self.fullyCrossed == 0):
-            print(str((datetime.now() - self.startTime).total_seconds()))
             horizontalTime.writelines(str((datetime.now() - self.startTime).total_seconds()) + '\n')
             self.fullyCrossed = 1
 
         if(self.y+self.image.get_rect().height >= 800 and self.fullyCrossed == 0):
-            print(str((datetime.now() - self.startTime).total_seconds()))
             verticalTime.writelines(str((datetime.now() - self.startTime).total_seconds()) + '\n')
             self.fullyCrossed = 1
 

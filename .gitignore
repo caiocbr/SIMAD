@@ -98,3 +98,7 @@ ENV/
 
 #pyCharm code
 .idea/
+
+# Data Generation
+VerticalTime.txt
+HorizontalTime.txt

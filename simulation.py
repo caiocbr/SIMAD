@@ -168,7 +168,7 @@ def updateValues():
 # Generating vehicles in the simulation
 def generateVehicles():
     while(True):
-        vehicle_type = 1
+        vehicle_type = 0
         lane_number = random.randint(1,2)
         temp = random.randint(0,99)
         direction_number = 0

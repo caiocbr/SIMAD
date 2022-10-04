@@ -3,6 +3,7 @@ import time
 import threading
 import pygame
 import sys
+import numpy as np
 
 # Default values of signal timers
 defaultGreen = {0:10, 1:10, 2:10, 3:10}
@@ -178,7 +179,8 @@ def generateVehicles():
         elif(temp<dist[1]):
             direction_number = 1
         Vehicle(lane_number, vehicleTypes[vehicle_type], direction_number, directionNumbers[direction_number])
-        time.sleep(1)
+
+        time.sleep(max(0, np.random.normal(1.5, 0.5)))
 
 class Main:
     thread1 = threading.Thread(name="initialization",target=initialize, args=())    # initialization

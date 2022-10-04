@@ -1,3 +1,4 @@
+from datetime import datetime
 import random
 import time
 import threading
@@ -39,6 +40,10 @@ defaultStop = {'right': 580, 'down': 320, 'left': 810, 'up': 545}
 stoppingGap = 15    # stopping gap
 movingGap = 15   # moving gap
 
+# Opening files with time cross intersection 
+horizontalTime = open(r"HorizontalTime.txt", "a")
+verticalTime = open(r"VerticalTime.txt", "a")
+
 pygame.init()
 simulation = pygame.sprite.Group()
 
@@ -60,10 +65,14 @@ class Vehicle(pygame.sprite.Sprite):
         self.x = x[direction][lane]
         self.y = y[direction][lane]
         self.crossed = 0
+        self.startTime = 0
+        self.fullyCrossed = 0
         vehicles[direction][lane].append(self)
         self.index = len(vehicles[direction][lane]) - 1
         path = "images/" + direction + "/" + vehicleClass + ".png"
         self.image = pygame.image.load(path)
+
+        print("Created")
 
         if(len(vehicles[direction][lane])>1 and vehicles[direction][lane][self.index-1].crossed==0):    # if more than 1 vehicle in the lane of vehicle before it has crossed stop line
             if(direction=='right'):
@@ -100,8 +109,7 @@ class Vehicle(pygame.sprite.Sprite):
             if(self.crossed==0 and self.x+self.image.get_rect().width>stopLines[self.direction]):   # if the image has crossed stop line now
                 self.crossed = 1
             if((self.x+self.image.get_rect().width<=self.stop or self.crossed == 1 or (currentGreen==0 and currentYellow==0)) and (self.index==0 or self.x+self.image.get_rect().width<(vehicles[self.direction][self.lane][self.index-1].x - movingGap))):                
-            # (if the image has not reached its stop coordinate or has crossed stop line or has green signal) and (it is either the first vehicle in that lane or it is has enough gap to the next vehicle in that lane)
-                self.x += self.speed  # move the vehicle
+                self.x += self.speed
         elif(self.direction=='down'):
             if(self.crossed==0 and self.y+self.image.get_rect().height>stopLines[self.direction]):
                 self.crossed = 1
@@ -118,16 +126,30 @@ class Vehicle(pygame.sprite.Sprite):
             if((self.y>=self.stop or self.crossed == 1 or (currentGreen==3 and currentYellow==0)) and (self.index==0 or self.y>(vehicles[self.direction][self.lane][self.index-1].y + vehicles[self.direction][self.lane][self.index-1].image.get_rect().height + movingGap))):                
                 self.y -= self.speed
 
+
+        if(self.direction=='right' and self.x+self.image.get_rect().width >= 0 and self.startTime == 0):
+            self.startTime = datetime.now()
+
+        if(self.direction=='down' and self.y+self.image.get_rect().height >= 0 and self.startTime == 0):
+            self.startTime = datetime.now()
+
+        if(self.x+self.image.get_rect().width >= 1400 and self.fullyCrossed == 0):
+            print(str((datetime.now() - self.startTime).total_seconds()))
+            horizontalTime.writelines(str((datetime.now() - self.startTime).total_seconds()) + '\n')
+            self.fullyCrossed = 1
+
+        if(self.y+self.image.get_rect().height >= 800 and self.fullyCrossed == 0):
+            print(str((datetime.now() - self.startTime).total_seconds()))
+            verticalTime.writelines(str((datetime.now() - self.startTime).total_seconds()) + '\n')
+            self.fullyCrossed = 1
+
+
 # Initialization of signals with default values
 def initialize():
     ts1 = TrafficSignal(0, defaultYellow, defaultGreen[0])
     signals.append(ts1)
     ts2 = TrafficSignal(ts1.red+ts1.yellow+ts1.green, defaultYellow, defaultGreen[1])
     signals.append(ts2)
-    #ts3 = TrafficSignal(defaultRed, defaultYellow, defaultGreen[2])
-    #signals.append(ts3)
-    #ts4 = TrafficSignal(defaultRed, defaultYellow, defaultGreen[3])
-    #signals.append(ts4)
     repeat()
 
 def repeat():
@@ -167,25 +189,9 @@ def updateValues():
             signals[i].red-=1
 
 # Generating vehicles in the simulation
-#def generateVehicles():
-#    while(True):
-#        vehicle_type = 0
-#        lane_number = random.randint(1,2)
-#        temp = random.randint(0,99)
-#        direction_number = 0
-#        dist = [50,100]
-#        if(temp<dist[0]):
-#            direction_number = 0
-#        elif(temp<dist[1]):
-#            direction_number = 1
-#        Vehicle(lane_number, vehicleTypes[vehicle_type], direction_number, directionNumbers[direction_number])
-
-#        time.sleep(max(0, np.random.normal(1.5, 0.5)))
-
-# Generating vehicles in the simulation
-def generateVehiclesNormalDistribution(vehicle_type, lane_number, direction_number, average, variance):
+def generateVehiclesNormalDistribution(vehicle_type, direction_number, average, variance):
     while(True):
-        Vehicle(lane_number, vehicleTypes[vehicle_type], direction_number, directionNumbers[direction_number])
+        Vehicle(random.randint(1,2), vehicleTypes[vehicle_type], direction_number, directionNumbers[direction_number])
 
         time.sleep(max(0, np.random.normal(average, variance)))
 
@@ -215,17 +221,21 @@ class Main:
     greenSignal = pygame.image.load('images/signals/green.png')
     font = pygame.font.Font(None, 30)
 
-    thread2 = threading.Thread(name="generateVehiclesLeftRight",target=generateVehiclesNormalDistribution, args=(0, 0, 0, 2, 0.5))    # Generating vehicles
+    thread2 = threading.Thread(name="generateVehiclesLeftRight",target=generateVehiclesNormalDistribution, args=(0, 0, 2, 0.5))    # Generating vehicles
     thread2.daemon = True
     thread2.start()
 
-    thread3 = threading.Thread(name="generateVehiclesTopDown",target=generateVehiclesNormalDistribution, args=(0, 1, 1, 2, 0.5))    # Generating vehicles
+    thread3 = threading.Thread(name="generateVehiclesTopDown",target=generateVehiclesNormalDistribution, args=(0, 1, 2, 0.5))    # Generating vehicles
     thread3.daemon = True
     thread3.start()
 
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                # Closing files with time cross intersection 
+                horizontalTime.close()
+                verticalTime.close()
+
                 sys.exit()
 
         screen.blit(background,(0,0))   # display background in simulation
@@ -255,6 +265,5 @@ class Main:
             screen.blit(vehicle.image, [vehicle.x, vehicle.y])
             vehicle.move()
         pygame.display.update()
-
 
 Main()

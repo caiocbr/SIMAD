@@ -167,20 +167,27 @@ def updateValues():
             signals[i].red-=1
 
 # Generating vehicles in the simulation
-def generateVehicles():
+#def generateVehicles():
+#    while(True):
+#        vehicle_type = 0
+#        lane_number = random.randint(1,2)
+#        temp = random.randint(0,99)
+#        direction_number = 0
+#        dist = [50,100]
+#        if(temp<dist[0]):
+#            direction_number = 0
+#        elif(temp<dist[1]):
+#            direction_number = 1
+#        Vehicle(lane_number, vehicleTypes[vehicle_type], direction_number, directionNumbers[direction_number])
+
+#        time.sleep(max(0, np.random.normal(1.5, 0.5)))
+
+# Generating vehicles in the simulation
+def generateVehiclesNormalDistribution(vehicle_type, lane_number, direction_number, average, variance):
     while(True):
-        vehicle_type = 0
-        lane_number = random.randint(1,2)
-        temp = random.randint(0,99)
-        direction_number = 0
-        dist = [50,100]
-        if(temp<dist[0]):
-            direction_number = 0
-        elif(temp<dist[1]):
-            direction_number = 1
         Vehicle(lane_number, vehicleTypes[vehicle_type], direction_number, directionNumbers[direction_number])
 
-        time.sleep(max(0, np.random.normal(1.5, 0.5)))
+        time.sleep(max(0, np.random.normal(average, variance)))
 
 class Main:
     thread1 = threading.Thread(name="initialization",target=initialize, args=())    # initialization
@@ -208,9 +215,13 @@ class Main:
     greenSignal = pygame.image.load('images/signals/green.png')
     font = pygame.font.Font(None, 30)
 
-    thread2 = threading.Thread(name="generateVehicles",target=generateVehicles, args=())    # Generating vehicles
+    thread2 = threading.Thread(name="generateVehiclesLeftRight",target=generateVehiclesNormalDistribution, args=(0, 0, 0, 2, 0.5))    # Generating vehicles
     thread2.daemon = True
     thread2.start()
+
+    thread3 = threading.Thread(name="generateVehiclesTopDown",target=generateVehiclesNormalDistribution, args=(0, 1, 1, 2, 0.5))    # Generating vehicles
+    thread3.daemon = True
+    thread3.start()
 
     while True:
         for event in pygame.event.get():

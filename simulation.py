@@ -17,7 +17,7 @@ currentGreen = 0   # Indicates which signal is green currently
 nextGreen = (currentGreen+1)%noOfSignals    # Indicates which signal will turn green next
 currentYellow = 0   # Indicates whether yellow signal is on or off 
 
-speeds = {'car':2.25, 'bus':1.8, 'truck':1.8, 'bike':2.5}  # average speeds of vehicles
+speeds = {'car':3, 'bus':1.8, 'truck':1.8, 'bike':2.5}  # average speeds of vehicles
 
 # Coordinates of vehicles' start
 x = {'right':[0,0,0], 'down':[755,727,697], 'left':[1400,1400,1400], 'up':[602,627,657]}    
@@ -104,7 +104,7 @@ class Vehicle(pygame.sprite.Sprite):
 
     def move(self):
         if(self.direction=='right'):
-            if(self.crossed==0 and self.x+self.image.get_rect().width>stopLines[self.direction]):   # if the image has crossed stop line now
+            if(self.crossed==0 and self.x+self.image.get_rect().width>stopLines[self.direction]):
                 self.crossed = 1
             if((self.x+self.image.get_rect().width<=self.stop or self.crossed == 1 or (currentGreen==0 and currentYellow==0)) and (self.index==0 or self.x+self.image.get_rect().width<(vehicles[self.direction][self.lane][self.index-1].x - movingGap))):                
                 self.x += self.speed
@@ -132,10 +132,12 @@ class Vehicle(pygame.sprite.Sprite):
             self.startTime = datetime.now()
 
         if(self.x+self.image.get_rect().width >= 1400 and self.fullyCrossed == 0):
+            #print(str((datetime.now() - self.startTime).total_seconds()))
             horizontalTime.writelines(str((datetime.now() - self.startTime).total_seconds()) + '\n')
             self.fullyCrossed = 1
 
         if(self.y+self.image.get_rect().height >= 800 and self.fullyCrossed == 0):
+            #print(str((datetime.now() - self.startTime).total_seconds()))
             verticalTime.writelines(str((datetime.now() - self.startTime).total_seconds()) + '\n')
             self.fullyCrossed = 1
 
@@ -169,7 +171,7 @@ def repeat():
     signals[currentGreen].red = defaultRed
        
     currentGreen = nextGreen # set next signal as green signal
-    nextGreen = (currentGreen+1)%noOfSignals    # set next green signal
+    nextGreen = (currentGreen+1)%noOfSignals # set next green signal
     signals[nextGreen].red = signals[currentGreen].yellow+signals[currentGreen].green    # set the red time of next to next signal as (yellow time + green time) of next signal
     repeat()  
 
@@ -184,12 +186,19 @@ def updateValues():
         else:
             signals[i].red-=1
 
-# Generating vehicles in the simulation
+# Generating vehicles in normal distribution
 def generateVehiclesNormalDistribution(vehicle_type, direction_number, average, variance):
     while(True):
         Vehicle(random.randint(1,2), vehicleTypes[vehicle_type], direction_number, directionNumbers[direction_number])
 
         time.sleep(max(0, np.random.normal(average, variance)))
+
+# Generating vehicles in poisson distribution
+def generateVehiclesPoissonDistribution(vehicle_type, direction_number, lam):
+    while(True):
+        Vehicle(random.randint(1,2), vehicleTypes[vehicle_type], direction_number, directionNumbers[direction_number])
+
+        time.sleep(max(0, np.random.poisson(lam)))
 
 class Main:
     thread1 = threading.Thread(name="initialization",target=initialize, args=())    # initialization
@@ -217,15 +226,22 @@ class Main:
     greenSignal = pygame.image.load('images/signals/green.png')
     font = pygame.font.Font(None, 30)
 
-    thread2 = threading.Thread(name="generateVehiclesLeftRight",target=generateVehiclesNormalDistribution, args=(0, 0, 2, 0.5))    # Generating vehicles
+    # Generating vehicles using normal distribution
+    #thread2 = threading.Thread(name="generateVehiclesLeftRight",target=generateVehiclesNormalDistribution, args=(0, 0, 2, 0.5))  
+    # Generating vehicles using poisson distribution  
+    thread2 = threading.Thread(name="generateVehiclesLeftRight",target=generateVehiclesPoissonDistribution, args=(0, 0, 2))
     thread2.daemon = True
     thread2.start()
 
-    thread3 = threading.Thread(name="generateVehiclesTopDown",target=generateVehiclesNormalDistribution, args=(0, 1, 2, 0.5))    # Generating vehicles
+    # Generating vehicles using normal distribution
+    #thread3 = threading.Thread(name="generateVehiclesTopDown",target=generateVehiclesNormalDistribution, args=(0, 1, 2, 0.5))
+    # Generating vehicles using poisson distribution  
+    thread3 = threading.Thread(name="generateVehiclesLeftRight",target=generateVehiclesPoissonDistribution, args=(0, 1, 2))
     thread3.daemon = True
     thread3.start()
 
     while True:
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 # Closing files with time cross intersection 

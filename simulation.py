@@ -10,7 +10,7 @@ defaultRed = 150
 defaultYellow = 5
 
 signals = []
-noOfSignals = 4
+noOfSignals = 2
 currentGreen = 0   # Indicates which signal is green currently
 nextGreen = (currentGreen+1)%noOfSignals    # Indicates which signal will turn green next
 currentYellow = 0   # Indicates whether yellow signal is on or off 
@@ -123,10 +123,10 @@ def initialize():
     signals.append(ts1)
     ts2 = TrafficSignal(ts1.red+ts1.yellow+ts1.green, defaultYellow, defaultGreen[1])
     signals.append(ts2)
-    ts3 = TrafficSignal(defaultRed, defaultYellow, defaultGreen[2])
-    signals.append(ts3)
-    ts4 = TrafficSignal(defaultRed, defaultYellow, defaultGreen[3])
-    signals.append(ts4)
+    #ts3 = TrafficSignal(defaultRed, defaultYellow, defaultGreen[2])
+    #signals.append(ts3)
+    #ts4 = TrafficSignal(defaultRed, defaultYellow, defaultGreen[3])
+    #signals.append(ts4)
     repeat()
 
 def repeat():
@@ -172,15 +172,11 @@ def generateVehicles():
         lane_number = random.randint(1,2)
         temp = random.randint(0,99)
         direction_number = 0
-        dist = [25,50,75,100]
+        dist = [50,100]
         if(temp<dist[0]):
             direction_number = 0
         elif(temp<dist[1]):
             direction_number = 1
-        elif(temp<dist[2]):
-            direction_number = 2
-        elif(temp<dist[3]):
-            direction_number = 3
         Vehicle(lane_number, vehicleTypes[vehicle_type], direction_number, directionNumbers[direction_number])
         time.sleep(1)
 

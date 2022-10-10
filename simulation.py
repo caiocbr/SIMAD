@@ -7,8 +7,9 @@ import sys
 import numpy as np
 
 # Default values of signal timers
-defaultGreen = {0:10, 1:10, 2:10, 3:10}
-defaultRed = 150
+greenTime = int(sys.argv[1])
+defaultGreen = {0:greenTime, 1:greenTime, 2:greenTime, 3:greenTime}
+defaultRed = greenTime*10-50
 defaultYellow = 5
 
 signals = []
@@ -41,8 +42,8 @@ stoppingGap = 15    # stopping gap
 movingGap = 15   # moving gap
 
 # Opening files with time cross intersection 
-horizontalTime = open(r"HorizontalTime.txt", "a")
-verticalTime = open(r"VerticalTime.txt", "a")
+horizontalTime = open(rf"HorizontalTime{greenTime}.txt", "a")
+verticalTime = open(rf"VerticalTime{greenTime}.txt", "a")
 
 pygame.init()
 simulation = pygame.sprite.Group()
@@ -239,8 +240,12 @@ class Main:
     thread3 = threading.Thread(name="generateVehiclesLeftRight",target=generateVehiclesPoissonDistribution, args=(0, 1, 2))
     thread3.daemon = True
     thread3.start()
-
+    start = time.time()
     while True:
+        if time.time() - start > 600:
+            horizontalTime.close()
+            verticalTime.close()
+            exit()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
